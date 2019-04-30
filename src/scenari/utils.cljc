@@ -9,17 +9,18 @@
   (let [symbols (keys &env)]
     (zipmap (map (fn [sym] `(quote ~sym)) symbols) symbols)))
 
-(defn readr [prompt exit-code]
-  (let [input (clojure.main/repl-read prompt exit-code)]
-    (if (= input ::tl)
-      exit-code
-      input)))
-
-(defmacro break-with-repl []
-  `(clojure.main/repl
-    :prompt #(print "debug=> ")
-    :read readr
-    :eval (partial contextual-eval (local-context))))
+#?(:clj
+   (defn readr [prompt exit-code]
+     (let [input (clojure.main/repl-read prompt exit-code)]
+       (if (= input ::tl)
+         exit-code
+         input))))
+#?(:clj
+   (defmacro break-with-repl []
+     `(clojure.main/repl
+       :prompt #(print "debug=> ")
+       :read readr
+       :eval (partial contextual-eval (local-context)))))
 
 (defn get-whole-in
   ""

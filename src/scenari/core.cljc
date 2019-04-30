@@ -23,16 +23,17 @@
 
 (ns scenari.core
   (:require [instaparse.core :as insta]
-            [taoensso.timbre :as timbre]
             [clojure.string :as string]
             [clojure.zip :as zip]
             [clojure.edn :only read-string]
             [clojure.pprint :refer :all]
             [clojure.java.io :only [file as-file] :as io]
-            [scenari.utils :as utils :refer [get-in-tree]])
-   (:import org.apache.commons.io.FileUtils
-            org.apache.commons.io.filefilter.RegexFileFilter))
-(timbre/refer-timbre)
+            [scenari.utils :as utils :refer [get-in-tree]]
+            #?(:clj [taoensso.timbre :as timbre]))
+  #?(:clj (:import org.apache.commons.io.FileUtils
+                   org.apache.commons.io.filefilter.RegexFileFilter)))
+
+#?(:clj (timbre/refer-timbre))
 
 (def kw-translations-data {:fr {:given    "Etant donné que " :when "Quand " :and "Et "
                                 :then     "Alors " :scenario "Scénario :"
@@ -420,18 +421,19 @@
           (throw (RuntimeException. (str "type " (type spec) "for spec not accepted (only string or file)")))))))
   :default :file)
 
-(defn get-spec-files [basedir]
-  (letfn [(find-spec-files [basedir]
-            (FileUtils/listFiles
-             basedir
-             (into-array ["story" "feature"])
-             true ;;recursive
-             ))]
-    (case (str (type basedir))
-      "class java.lang.String" (if (.exists (java.io.File. basedir))
-                         (find-spec-files (java.io.File. basedir ))
-                         (throw (RuntimeException. (str basedir " doesn't exists in path: " (java.lang.System/getProperty "user.dir")))))
-      "class java.io.File" (find-spec-files basedir))))
+#?(:clj
+   (defn get-spec-files [basedir]
+     (letfn [(find-spec-files [basedir]
+               (FileUtils/listFiles
+                basedir
+                (into-array ["story" "feature"])
+                true ;;recursive
+                ))]
+       (case (str (type basedir))
+         "class java.lang.String" (if (.exists (java.io.File. basedir))
+                                    (find-spec-files (java.io.File. basedir ))
+                                    (throw (RuntimeException. (str basedir " doesn't exists in path: " (java.lang.System/getProperty "user.dir")))))
+         "class java.io.File" (find-spec-files basedir)))))
 
 
 (defmethod exec-spec
